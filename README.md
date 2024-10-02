@@ -1,1 +1,3 @@
-# curso-devops-gitactions 2
+# curso-devops-gitactions
+
+# Aprendiendo lo basico
