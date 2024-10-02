@@ -1,2 +1,1 @@
-# curso-devops-jenkins
-curso-devops-jenkins
+# curso-devops-gitactions 2
