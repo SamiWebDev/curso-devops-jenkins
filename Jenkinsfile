@@ -1,34 +1,60 @@
 pipeline {
     agent any
-    tools {
-        nodejs "nodejs18"
+ 
+    environment {
+        FLY_API_TOKEN=credentials('FLY_API_TOKEN_TEST')
     }
-
+ 
+    tools {
+        nodejs "nodejs-18"
+    }
+ 
     triggers{
         githubPush()
     }
-
+    
     stages {
-        stage('Install Dependencies') {
+ 
+        stage('Install Fly.io') {
             steps {
+                echo 'Installing Fly.io...'
+                withCredentials([string(credentialsId: 'FLY_API_TOKEN', variable: 'FLY_API_TOKEN')]) {
+                    sh '''
+                        # Instalar flyctl si no está ya disponible
+                        curl -L https://fly.io/install.sh | sh
+                        export FLYCTL_INSTALL="/var/jenkins_home/.fly"
+                        export PATH="$FLYCTL_INSTALL/bin:$PATH"
+                        # Autenticarse con Fly.io
+                        fly auth token $FLY_API_TOKEN
+                    '''
+                }
+            }
+        }
+        
+        stage('Install dependencies'){
+            steps {
+                echo 'Installing...'
                 sh 'npm install'
             }
         }
-        stage('Run Tests') {
+        stage('Run test'){
+            steps{
+                echo 'Running test'
+                sh 'npm run test'
+            }
+        }
+        stage('Pintar credencial'){
+            steps{
+                echo 'Hola esta es mi credencial: $FLY_API_TOKEN'
+            }
+        }
+ 
+        stage('Deploy to Fly.io') {
             steps {
-                sh 'npm test'
+                echo 'Deploying the project to Fly.io...'
+                sh '/var/jenkins_home/.fly/bin/flyctl deploy --app curso-devops-jenkins --remote-only'
             }
         }
     }
-    post {
-        always {
-            echo 'Pipeline finalizado. Limpieza del entorno.'
-        }
-        success {
-            echo 'El pipeline ha finalizado correctamente.'
-        }
-        failure {
-            echo 'El pipeline ha fallado.'
-        }
-    }
 }
+ 
